@@ -1,0 +1,10 @@
+langchain
+langchain-community
+langchain-chroma
+langchain-openai
+langchain-core
+openai
+chromadb
+tree-sitter
+tree-sitter-languages
+tiktoken
