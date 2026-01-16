@@ -1,9 +1,16 @@
-from langchain_chroma import Chroma
-from langchain_openai import OpenAIEmbeddings
+try:
+    from langchain_chroma import Chroma
+except ImportError:
+    Chroma = None
+    
 from langchain_core.documents import Document
 from typing import List
 import os
+import logging
+from config import LLMConfig
+from llm_factory import LLMFactory
 
+logger = logging.getLogger(__name__)
 
 class VectorStore:
     """
@@ -11,11 +18,13 @@ class VectorStore:
     Uses embeddings to enable searching by meaning rather than keywords.
     """
     
-    def __init__(self, persist_directory: str = "./chroma_db", embedding_model: str = "text-embedding-3-large"):
+    def __init__(self, persist_directory: str = "./chroma_db", config: LLMConfig = None):
         self.persist_directory = persist_directory
-        self.embedding_model = embedding_model
+        self.config = config or LLMConfig()
         self.db = None
         self.retriever = None
+        if Chroma is None:
+            logger.warning("ChromaDB not installed. Vector storage will not work.")
         
     def initialize_from_documents(self, documents: List[Document]) -> None:
         """
@@ -27,7 +36,7 @@ class VectorStore:
         if not documents:
             raise ValueError("Cannot initialize vector store with empty documents")
             
-        embeddings = OpenAIEmbeddings(model=self.embedding_model)
+        embeddings = LLMFactory.create_embeddings(self.config)
         
         self.db = Chroma.from_documents(
             documents,
@@ -40,8 +49,8 @@ class VectorStore:
             search_kwargs={"k": 8}
         )
         
-        print(f"Vector store initialized with {len(documents)} documents")
-        print(f"Using MMR (Maximal Marginal Relevance) for diverse retrieval")
+        logger.info(f"Vector store initialized with {len(documents)} documents")
+        logger.info(f"Using MMR (Maximal Marginal Relevance) for diverse retrieval")
     
     def load_existing(self) -> bool:
         """
@@ -54,7 +63,7 @@ class VectorStore:
             return False
             
         try:
-            embeddings = OpenAIEmbeddings(model=self.embedding_model)
+            embeddings = LLMFactory.create_embeddings(self.config)
             self.db = Chroma(
                 persist_directory=self.persist_directory,
                 embedding_function=embeddings
@@ -65,10 +74,10 @@ class VectorStore:
                 search_kwargs={"k": 8}
             )
             
-            print(f"Loaded existing vector store from {self.persist_directory}")
+            logger.info(f"Loaded existing vector store from {self.persist_directory}")
             return True
         except Exception as e:
-            print(f"Error loading existing vector store: {e}")
+            logger.error(f"Error loading existing vector store: {e}")
             return False
     
     def search(self, query: str, k: int = 8) -> List[Document]:
@@ -110,4 +119,4 @@ class VectorStore:
             raise ValueError("Vector store not initialized")
             
         self.db.add_documents(documents)
-        print(f"Added {len(documents)} new documents to vector store")
+        logger.info(f"Added {len(documents)} new documents to vector store")

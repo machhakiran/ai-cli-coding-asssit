@@ -1,179 +1,228 @@
-# AI Code Assistant: Building Cursor, Windsurf, and Antigravity
+<div align="center">
+  <img src="assets/logo.png" alt="Kavi.ai Code Assistant Logo" width="120" style="margin-bottom: 20px;"/>
+  
+  # Kavi.ai Code Assistant
+  
+  **The Production-Grade, Local-First RAG Code Assistant**
+  
+  [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+  [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+  [![Ollama](https://img.shields.io/badge/Powered%20by-Ollama-white?logo=ollama)](https://ollama.com/)
+  [![Code Style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-A production-grade implementation showing how AI coding assistants like Cursor, Windsurf, and Antigravity work internally using RAG (Retrieval-Augmented Generation).
+  <p>
+    <a href="#-quick-start">🚀 Quick Start</a> •
+    <a href="#-features">✨ Features</a> •
+    <a href="#-architecture">🏗️ Architecture</a> •
+    <a href="#-configuration">⚙️ Configuration</a> •
+    <a href="#-demo">👀 Demo</a>
+  </p>
+</div>
 
-## Architecture Overview
+---
 
-This project demonstrates the four critical components of a code assistant:
+## 💡 Overview
 
-### 1. Code Parsing (AST-Based)
-Unlike simple text splitters that break code arbitrarily, this uses Tree-sitter to parse code into an Abstract Syntax Tree (AST). This ensures functions and classes remain intact.
+**Kavi.ai Code Assistant** is a powerful, privacy-focused tool that turns your codebase into a knowledgeable partner. Unlike standard "chat with pdf" tools, this assistant strictly understands **code structure**.
 
-### 2. Vector Storage
-Uses ChromaDB with OpenAI embeddings to enable semantic search. The system understands that `get_users()` and "getting the user list" mean the same thing.
+It uses **AST (Abstract Syntax Tree) Parsing** to respect function and class boundaries, ensuring that when you ask about a feature, the AI reads the *actual* code logic, not just random text fragments.
 
-### 3. Repository Mapping
-For large codebases (100k+ lines), creates a compressed tree structure showing file hierarchy and class/function definitions. This gives the AI a global view.
+**Key capabilities:**
+*   **100% Offline**: Runs locally with Ollama (Llama 3.2, Mistral). No API keys required.
+*   **Deep Understanding**: Uses Tree-sitter to parse Python code structurally.
+*   **Repository Mapping**: Creates a coherent "mental map" of your entire project structure.
+*   **Source Citations**: Every answer cites the exact files and code chunks used.
 
-### 4. RAG Chain
-Combines retrieved code context with LLM prompts designed for senior software engineers, ensuring accurate and context-aware responses.
+---
 
-## Key Features
+## 🚀 Quick Start
 
-- AST-aware code parsing that preserves semantic integrity
-- MMR (Maximal Marginal Relevance) search for diverse, relevant results
-- Repository structure mapping for global codebase understanding
-- Interactive Q&A mode
-- Source document tracking
-- Support for multiple programming languages (Python, JavaScript, TypeScript, Java, Go, Rust, C++)
+### 1. Prerequisites
+*   [Python 3.10+](https://www.python.org/)
+*   [Ollama](https://ollama.com/) (Download & Install)
 
-## Installation
-
+### 2. Prepare the Brain
+Pull the necessary models (Llama 3.2 for chat, Nomic for embeddings).
 ```bash
-# Install dependencies
+ollama pull llama3.2
+ollama pull nomic-embed-text
+```
+
+### 3. Install
+```bash
+git clone https://github.com/machhakiran/Code-Assistant-AI.git
+cd Code-Assistant-AI
+
+# Create virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# Install dependencies (requires C++ build tools for ChromaDB)
 pip install -r requirements.txt
-
-# Set your OpenAI API key
-export OPENAI_API_KEY='your-api-key-here'
 ```
 
-## Usage
-
-### Interactive Mode
+### 4. Run It!
+Chat with the assistant about *its own code* immediately:
 ```bash
-python main.py --repo ./your_project --interactive
+python main.py --repo . --interactive
 ```
 
-### Single Query
-```bash
-python main.py --repo ./your_project --query "How does the authentication system work?"
+---
+
+## 👀 Demo
+
+The **Interactive CLI** features a beautiful, developer-friendly interface with rich markdown support.
+
+```text
+╭──────────────────────────────────────────────────────────╮
+│                                                          │
+│     __ ___         _           _                         │
+│    / //_ /__ __ __(_)  ___ _  (_)                        │
+│   / ,< / _ `/ |/ / /  / _ `/ / /                         │
+│  /_/|_|\_,_/|___/_/   \_,_/ /_/                          │
+│                                                          │
+│       Code Assistant AI                                  │
+│                                                          │
+╰───────────────── Powered by RAG & LLMs ──────────────────╯
+✓ System Ready
+
+You: How does the VectorStore work?
+
+Assistant:
+The VectorStore class uses ChromaDB to store semantic embeddings...
 ```
 
-### Show Source Documents
-```bash
-python main.py --repo ./your_project --query "Explain the payment processor" --show-sources
+---
+
+## ✨ Features
+
+### 🔍 Semantic Search (RAG)
+Instead of keyword matching, we use **Vector Embeddings** to find code that matches the *intent* of your query.
+
+### 🧠 AST Parsing Strategy
+We don't blindly chop text. We use **Tree-sitter** to ensure that if a function is retrieved, the **whole function** is retrieved.
+
+| Feature | Standard Splitters | **Our AST Parser** |
+| :--- | :--- | :--- |
+| **Boundaries** | Random character counts | Logical Functions/Classes |
+| **Context** | Often cuts mid-logic | Preserves semantic integrity |
+| **Accuracy** | Low | **High** |
+
+### 🗺️ Repository Mapping
+Before answering, the AI looks at a generated **Context Map** of your project (file tree + signatures). This helps it understand *where* to look before it even starts reading code.
+
+---
+
+## 🏗️ Architecture
+
+The system uses a modern **Retrieval-Augmented Generation (RAG)** pipeline optimized for local execution.
+
+### System Architecture
+
+The following diagram illustrates the high-level architecture of the `Code-Assistant-AI`, organized into clear layers of responsibility.
+
+```mermaid
+graph TD
+    %% Styling
+    classDef client fill:#3b82f6,stroke:#1d4ed8,stroke-width:2px,color:white;
+    classDef app fill:#10b981,stroke:#059669,stroke-width:2px,color:white;
+    classDef core fill:#8b5cf6,stroke:#7c3aed,stroke-width:2px,color:white;
+    classDef infra fill:#64748b,stroke:#475569,stroke-width:2px,color:white;
+    classDef data fill:#f59e0b,stroke:#d97706,stroke-width:2px,color:white;
+
+    subgraph ClientLayer [💻 Presentation Layer]
+        CLI([User / CLI]) :::client
+        Config[Configuration & Env] :::client
+    end
+
+    subgraph AppLayer [⚙️ Application Layer]
+        Main[Main Entry Point] :::app
+        Assistant[CodeAssistant Controller] :::app
+        Factory[LLM Factory] :::app
+    end
+
+    subgraph CoreLayer [🧠 Core Processing Engines]
+        Parser[Code Parser] :::core
+        noteParser["AST Analysis (Tree-sitter)"]
+        
+        Mapper[Repo Mapper] :::core
+        noteMapper["Context Tree Generation"]
+        
+        RAG[RAG Chain] :::core
+        noteRAG["Retrieval Augmented Generation"]
+    end
+
+    subgraph DataLayer [💾 Data & Storage]
+        VectorStore[Vector Store] :::data
+        Chroma[(ChromaDB)] :::data
+        Docs[Source Documents] :::data
+    end
+
+    subgraph InfraLayer [🏗️ Inference Infrastructure]
+        OllamaChat[Ollama: Chat (Llama 3.2)] :::infra
+        OllamaEmbed[Ollama: Embed (Nomic)] :::infra
+    end
+
+    %% Flow Connections
+    CLI -->|Command / Query| Main
+    Config -->|Settings| Main
+    
+    Main -->|Init| Assistant
+    Assistant -->|Create| Factory
+    
+    Factory -->|Instantiate| OllamaChat
+    Factory -->|Instantiate| OllamaEmbed
+    
+    Assistant -->|1. Parse Code| Parser
+    Parser --- noteParser
+    Parser -->|Chunks| VectorStore
+    
+    Assistant -->|2. Map Structure| Mapper
+    Mapper --- noteMapper
+    Mapper -->|Context Map| RAG
+    
+    Assistant -->|3. Query| RAG
+    RAG --- noteRAG
+    
+    RAG -->|Retrieve Context| VectorStore
+    VectorStore <-->|Store/Fetch Embeddings| Chroma
+    VectorStore -.->|Generate Embeddings| OllamaEmbed
+    
+    RAG -->|Generate Answer| OllamaChat
+    OllamaChat -->|Response| CLI
 ```
 
-### Multiple File Types
-```bash
-python main.py --repo ./your_project --extensions .py .js .ts --interactive
-```
+### Coding Flow
+1.  **Ingest**: Scan all `.py` files.
+2.  **Parse**: Extract functions/classes using Tree-sitter.
+3.  **Embed**: Convert code to vectors using `nomic-embed-text`.
+4.  **Store**: Save to local ChromaDB.
+5.  **Query**: Retrieve relevant chunks + Global Map -> Send to LLM.
 
-### View Repository Structure
-```bash
-python main.py --repo ./your_project --show-structure
-```
+---
 
-### Force Reindex
-```bash
-python main.py --repo ./your_project --reindex --interactive
-```
+## ⚙️ Configuration
 
-## How It Works
+Control the assistant via Environment Variables (`.env`) or CLI arguments.
 
-### 1. Code Parsing with Tree-sitter
+**Default Configuration (`src/config.py`):**
 ```python
-# Instead of breaking code at arbitrary character limits,
-# Tree-sitter parses the AST and splits by logical units
-loader = GenericLoader.from_filesystem(
-    "./your_repo",
-    parser=LanguageParser(language=Language.PYTHON, parser_threshold=500)
-)
+LLM_PROVIDER = "ollama"         # or "openai"
+LLM_MODEL = "llama3.2"         # or "gpt-4", "mistral"
+EMBEDDING_MODEL = "nomic-embed-text"
+BASE_URL = "http://localhost:11434"
 ```
 
-### 2. Semantic Vector Search
-```python
-# Uses MMR (Maximal Marginal Relevance) to avoid returning
-# 5 identical code blocks, instead providing diverse relevant results
-retriever = db.as_retriever(
-    search_type="mmr",
-    search_kwargs={"k": 8}
-)
+**Override Example:**
+```bash
+# Use OpenAI GPT-4 instead of local Ollama
+export OPENAI_API_KEY="sk-..."
+python main.py --repo . --provider openai --model gpt-4
 ```
 
-### 3. Repository Mapping
-```
-src/
-  auth/
-    login.py:
-      - class AuthManager
-      - def login(user, pass)
-  db/
-    models.py:
-      - class User
-```
+---
 
-### 4. Context-Aware Prompting
-The system uses prompts designed for senior engineers, instructing the AI to:
-- Reference actual class and variable names from context
-- Admit when context is insufficient
-- Use repository maps to suggest relevant files not in search results
-
-## Architecture Diagram
-
-```
-User Query
-    |
-    v
-[Repository Mapper] -> Creates global structure view
-    |
-    v
-[Code Parser] -> Parses code via AST (Tree-sitter)
-    |
-    v
-[Vector Store] -> Stores embeddings in ChromaDB
-    |
-    v
-[Retriever] -> MMR search for relevant chunks
-    |
-    v
-[RAG Chain] -> Combines context + repo map + query
-    |
-    v
-[LLM] -> Generates context-aware response
-    |
-    v
-Answer
-```
-
-## Why This Approach?
-
-### Problem with Simple Text Splitting
-```python
-# BAD: This breaks functions mid-way
-def process_payment(user, amount):
-    if user.balance < amount:  # <- Split happens here
-        return False
-```
-
-### Solution: AST-Based Splitting
-```python
-# GOOD: Complete logical units
-def process_payment(user, amount):
-    if user.balance < amount:
-        return False
-    user.balance -= amount
-    return True
-```
-
-## Advanced Features
-
-### MMR vs Simple Similarity Search
-- Simple similarity might return 5 nearly identical functions
-- MMR ensures diverse but relevant results
-- Gives the AI broader codebase perspective
-
-### Repository Mapping Benefits
-- AI can suggest files not in search results
-- Understands overall architecture
-- Essential for codebases over 100k lines
-
-## Example Session
-
-```
-$ python main.py --repo ./my_project --interactive
-
-INTERACTIVE CODE ASSISTANT
-Ask questions about your codebase. Type 'exit' to stop.
-
-You: How do I refactor the PaymentProcessor to use AsyncAPI?
+<div align="center">
+  <p>Built with ❤️ by the <strong>Kavi.ai</strong> Team</p>
+  <p><i>Empowering Developers with Local AI</i></p>
+</div>

@@ -1,9 +1,12 @@
 from langchain_classic.chains.retrieval import create_retrieval_chain
 from langchain_classic.chains.combine_documents.stuff import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_openai import ChatOpenAI
 from typing import Dict, Any
+from config import LLMConfig
+from llm_factory import LLMFactory
+import logging
 
+logger = logging.getLogger(__name__)
 
 class RAGChain:
     """
@@ -11,17 +14,16 @@ class RAGChain:
     Combines retrieved code context with LLM to provide accurate, context-aware answers.
     """
     
-    def __init__(self, retriever, repo_map: str = "", model: str = "gpt-4-turbo-preview", temperature: float = 0):
+    def __init__(self, retriever, repo_map: str = "", config: LLMConfig = None):
         self.retriever = retriever
         self.repo_map = repo_map
-        self.model = model
-        self.temperature = temperature
+        self.config = config or LLMConfig()
         self.chain = None
         self._build_chain()
         
     def _build_chain(self) -> None:
         """Build the RAG chain with appropriate prompts."""
-        llm = ChatOpenAI(model=self.model, temperature=self.temperature)
+        llm = LLMFactory.create_llm(self.config)
         
         repo_map_section = ""
         if self.repo_map:

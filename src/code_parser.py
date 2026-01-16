@@ -53,14 +53,24 @@ class CodeParser:
             language = language_map[ext]
             
             try:
-                loader = GenericLoader.from_filesystem(
-                    repo_path,
-                    glob="**/*",
-                    suffixes=[ext],
-                    parser=LanguageParser(language=language, parser_threshold=500)
-                )
-                documents = loader.load()
-                all_documents.extend(documents)
+                # Manually walk and load to handle encoding errors better
+                for root, _, files in os.walk(repo_path):
+                    for file in files:
+                        if file.endswith(ext):
+                            file_path = os.path.join(root, file)
+                            try:
+                                from langchain_community.document_loaders import TextLoader
+                                loader = TextLoader(file_path, encoding='utf-8', autodetect_encoding=True)
+                                documents = loader.load()
+                                
+                                # Add language metadata for the splitter
+                                for doc in documents:
+                                    doc.metadata["language"] = language
+                                    
+                                all_documents.extend(documents)
+                            except Exception as e:
+                                print(f"Skipping {file_path} due to error: {e}")
+                                continue
             except Exception as e:
                 print(f"Error loading {ext} files: {e}")
                 continue
