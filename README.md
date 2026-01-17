@@ -117,54 +117,38 @@ Before answering, the AI looks at a generated **Context Map** of your project (f
 
 The system uses a modern **Retrieval-Augmented Generation (RAG)** pipeline optimized for local execution.
 
-### System Architecture
-
-The following diagram illustrates the high-level architecture of the `Code-Assistant-AI`, organized into clear layers of responsibility.
-
 ```mermaid
 graph TD
-    %% Styling
-    classDef client fill:#3b82f6,stroke:#1d4ed8,stroke-width:2px,color:white;
-    classDef app fill:#10b981,stroke:#059669,stroke-width:2px,color:white;
-    classDef core fill:#8b5cf6,stroke:#7c3aed,stroke-width:2px,color:white;
-    classDef infra fill:#64748b,stroke:#475569,stroke-width:2px,color:white;
-    classDef data fill:#f59e0b,stroke:#d97706,stroke-width:2px,color:white;
-
-    subgraph ClientLayer [💻 Presentation Layer]
-        CLI([User / CLI]) :::client
-        Config[Configuration & Env] :::client
+    %% Define Nodes
+    subgraph ClientLayer [Presentation Layer]
+        CLI([User / CLI])
+        Config[Configuration & Env]
     end
 
-    subgraph AppLayer [⚙️ Application Layer]
-        Main[Main Entry Point] :::app
-        Assistant[CodeAssistant Controller] :::app
-        Factory[LLM Factory] :::app
+    subgraph AppLayer [Application Layer]
+        Main[Main Entry Point]
+        Assistant[CodeAssistant Controller]
+        Factory[LLM Factory]
     end
 
-    subgraph CoreLayer [🧠 Core Processing Engines]
-        Parser[Code Parser] :::core
-        noteParser["AST Analysis (Tree-sitter)"]
-        
-        Mapper[Repo Mapper] :::core
-        noteMapper["Context Tree Generation"]
-        
-        RAG[RAG Chain] :::core
-        noteRAG["Retrieval Augmented Generation"]
+    subgraph CoreLayer [Core Engine]
+        Parser[Code Parser]
+        Mapper[Repo Mapper]
+        RAG[RAG Chain]
     end
 
-    subgraph DataLayer [💾 Data & Storage]
-        VectorStore[Vector Store] :::data
-        Chroma[(ChromaDB)] :::data
-        Docs[Source Documents] :::data
+    subgraph DataLayer [Data & Storage]
+        VectorStore[Vector Store]
+        Chroma[(ChromaDB)]
     end
 
-    subgraph InfraLayer [🏗️ Inference Infrastructure]
-        OllamaChat[Ollama: Chat (Llama 3.2)] :::infra
-        OllamaEmbed[Ollama: Embed (Nomic)] :::infra
+    subgraph InfraLayer [Inference Infrastructure]
+        OllamaChat[Ollama: Chat Llama 3.2]
+        OllamaEmbed[Ollama: Embed Nomic]
     end
 
-    %% Flow Connections
-    CLI -->|Command / Query| Main
+    %% Edge Connections
+    CLI -->|Command| Main
     Config -->|Settings| Main
     
     Main -->|Init| Assistant
@@ -173,23 +157,31 @@ graph TD
     Factory -->|Instantiate| OllamaChat
     Factory -->|Instantiate| OllamaEmbed
     
-    Assistant -->|1. Parse Code| Parser
-    Parser --- noteParser
+    Assistant -->|1. Scan| Parser
     Parser -->|Chunks| VectorStore
     
-    Assistant -->|2. Map Structure| Mapper
-    Mapper --- noteMapper
-    Mapper -->|Context Map| RAG
+    Assistant -->|2. Map| Mapper
+    Mapper -->|Context| RAG
     
     Assistant -->|3. Query| RAG
-    RAG --- noteRAG
+    RAG -->|Retrieve| VectorStore
+    VectorStore <--> Chroma
     
-    RAG -->|Retrieve Context| VectorStore
-    VectorStore <-->|Store/Fetch Embeddings| Chroma
-    VectorStore -.->|Generate Embeddings| OllamaEmbed
-    
-    RAG -->|Generate Answer| OllamaChat
+    RAG -->|Generate| OllamaChat
     OllamaChat -->|Response| CLI
+
+    %% Styling
+    classDef client fill:#3b82f6,stroke:#1d4ed8,stroke-width:2px,color:white;
+    classDef app fill:#10b981,stroke:#059669,stroke-width:2px,color:white;
+    classDef core fill:#8b5cf6,stroke:#7c3aed,stroke-width:2px,color:white;
+    classDef data fill:#f59e0b,stroke:#d97706,stroke-width:2px,color:white;
+    classDef infra fill:#64748b,stroke:#475569,stroke-width:2px,color:white;
+
+    class CLI,Config client;
+    class Main,Assistant,Factory app;
+    class Parser,Mapper,RAG core;
+    class VectorStore,Chroma,Docs data;
+    class OllamaChat,OllamaEmbed infra;
 ```
 
 ### Coding Flow
